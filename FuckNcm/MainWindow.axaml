@@ -1,0 +1,268 @@
+<sukiUi:SukiWindow xmlns="https://github.com/avaloniaui"
+                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                   mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
+                   xmlns:sukiUi="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+                   xmlns:models="clr-namespace:FuckNcm.Models"
+                   xmlns:fuckncm="clr-namespace:FuckNcm"
+                   xmlns:content="https://github.com/kikipoulet/SukiUI"
+                   x:Class="FuckNcm.MainWindow"
+                   Title="FuckNcm"
+                   MinWidth="900"
+                   MinHeight="600"
+                   Width="1600"
+                   Height="950"
+                   BackgroundAnimationEnabled="False">
+    <sukiUi:SukiWindow.Hosts>
+        <sukiUi:SukiDialogHost Name="DialogHost"/>
+    </sukiUi:SukiWindow.Hosts>
+    <Panel>
+        <!-- 背景图片层 -->
+        <Image x:Name="BackgroundImageControl"
+               Source="{Binding BackgroundImage, Source={x:Static fuckncm:Utils.ThemeBackgroundService}}"
+               Stretch="{Binding BackgroundImageStretch, Source={x:Static fuckncm:Utils.ThemeBackgroundService}}"
+               Opacity="{Binding BackgroundImageOpacity, Source={x:Static fuckncm:Utils.ThemeBackgroundService}}"
+               HorizontalAlignment="Stretch"
+               VerticalAlignment="Stretch"
+               IsHitTestVisible="False"/>
+
+        <Grid RowDefinitions="Auto,Auto,*,Auto">
+        
+        <!-- 菜单栏 -->
+        <Menu Grid.Row="0" Margin="8,8,8,0">
+            <MenuItem Header="工具">
+                <MenuItem Header="什么都没有"/>
+            </MenuItem>
+            <MenuItem Header="设置">
+                <MenuItem Header="暗色主题" Click="OnToggleThemeClick">
+                    <MenuItem.Icon>
+                        <PathIcon Name="DarkModeIcon" Data="{x:Static content:Icons.Check}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="设置背景" Click="OnSetBackgroundImageClick"/>
+                <MenuItem Header="恢复初始背景" Click="OnSetDefaultBackgroundImage"/>
+            </MenuItem>
+            <MenuItem Header="帮助">
+                <MenuItem Header="关于" Click="OnAboutClick"/>
+            </MenuItem>
+        </Menu>
+        
+        <!-- 顶部配置栏 -->
+        <Border Grid.Row="1" 
+                x:Name="ConfigBorder"
+                Background="#B0FFFFFF"
+                CornerRadius="8" 
+                Margin="16,16,16,8"
+                Padding="16">
+            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto,16,*,Auto">
+                <!-- 源目录 -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                           Text="源目录" 
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,8"/>
+                <TextBox Grid.Row="1" Grid.Column="0"
+                         x:Name="SourcePathTextBox"
+                         Watermark="请选择源目录路径..."
+                         VerticalAlignment="Center"
+                         IsReadOnly="True"/>
+                <Button Grid.Row="1" Grid.Column="1"
+                        Name="OpenSourcePathButton"
+                        Content="浏览"
+                        Click="OnBrowseSourceClick"
+                        Margin="8,0,0,0"/>
+                
+                <!-- 目标目录 -->
+                <TextBlock Grid.Row="0" Grid.Column="3" Grid.ColumnSpan="2"
+                           Text="输出目录" 
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,8"/>
+                <TextBox Grid.Row="1" Grid.Column="3"
+                         x:Name="TargetPathTextBox"
+                         Watermark="请选择输出目录路径..."
+                         VerticalAlignment="Center"
+                         IsReadOnly="True"/>
+                <Button Grid.Row="1" Grid.Column="4"
+                        Name="OpenTargetPathButton"
+                        Content="浏览"
+                        Click="OnBrowseTargetClick"
+                        Margin="8,0,0,0"/>
+            </Grid>
+        </Border>
+        
+        <!-- 主内容区域 - 文件列表 -->
+        <Border Grid.Row="2" 
+                x:Name="ContentBorder"
+                Background="#B0FFFFFF"
+                CornerRadius="8" 
+                Margin="16,8,16,8">
+            <Grid RowDefinitions="Auto,*,Auto">
+                <!-- 工具栏 -->
+                <Border Grid.Row="0" 
+                        BorderBrush="{DynamicResource SukiBorderBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="同步全部" Name="SyncButton" Click="OnStartSyncClick"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- 文件列表 DataGrid -->
+                <ScrollViewer x:Name="DataGridScrollViewer"
+                              Grid.Row="1"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Disabled">
+                    <DataGrid x:Name="MusicDataGrid"
+                              x:DataType="models:AudioFileInfo"
+                              AutoGenerateColumns="False"
+                              CanUserReorderColumns="True"
+                              CanUserResizeColumns="True"
+                              CanUserSortColumns="True"
+                              IsReadOnly="True"
+                              SelectionMode="Extended"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Visible"
+                              Margin="0,0,0,0">
+                        <DataGrid.Styles>
+                            <Style Selector="DataGridRowGroupHeader">
+                                <Setter Property="IsItemCountVisible" Value="True" />
+                            </Style>
+                        </DataGrid.Styles>
+                        <DataGrid.Columns>
+                        <!-- 封面列 -->
+                        <DataGridTemplateColumn Header="" MinWidth="60" CanUserSort="False" CanUserResize="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="models:AudioFileInfo">
+                                    <Border Width="40" Height="40" 
+                                            CornerRadius="4" 
+                                            Background="{DynamicResource SukiPrimaryColor}"
+                                            Margin="4">
+                                        <Image Source="{Binding Cover}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        
+                        <!-- 文件名列 -->
+                        <DataGridTextColumn Header="文件名" 
+                                            Binding="{Binding FileName}" 
+                                            MinWidth="150"/>
+                        
+                        <!-- 标题列 -->
+                        <DataGridTextColumn Header="标题" 
+                                            Binding="{Binding Title}" 
+                                            MinWidth="180"/>
+                        
+                        <!-- 艺术家列 -->
+                        <DataGridTextColumn Header="艺术家" 
+                                            Binding="{Binding Artist}" 
+                                            MinWidth="120"/>
+                        
+                        <!-- 专辑列 -->
+                        <DataGridTextColumn Header="专辑" 
+                                            Binding="{Binding Album}" 
+                                            MinWidth="140"/>
+                        
+                        <!-- 时长列 -->
+                        <DataGridTextColumn Header="时长" 
+                                            Binding="{Binding DurationFormatted}" 
+                                            MinWidth="80"/>
+                        
+                        <!-- 比特率列 -->
+                        <DataGridTextColumn Header="比特率" 
+                                            Binding="{Binding BitRateFormatted}" 
+                                            MinWidth="100"/>
+                        
+                        <!-- 采样率列 -->
+                        <DataGridTextColumn Header="采样率" 
+                                            Binding="{Binding SampleRateFormatted}" 
+                                            MinWidth="100"/>
+                        
+                        <!-- 编码器列 -->
+                        <DataGridTextColumn Header="Codec" 
+                                            Binding="{Binding Encoder}" 
+                                            MinWidth="95"/>
+                        
+                        <!-- Tag版本列 -->
+                        <DataGridTextColumn Header="Tag" 
+                                            Binding="{Binding TagVersion}" 
+                                            MinWidth="80"/>
+                        
+                        <!-- 修改时间列 -->
+                        <DataGridTextColumn Header="修改时间" 
+                                            Binding="{Binding ModifiedTime, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" 
+                                            MinWidth="130"/>
+                        
+                        <!-- 差异状态列 -->
+                        <DataGridTemplateColumn Header="状态" Width="80" CanUserResize="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="models:AudioFileInfo">
+                                    <Border Padding="6,2" 
+                                            CornerRadius="4"
+                                            HorizontalAlignment="Center"
+                                            Background="{Binding Status, 
+                                                Converter={StaticResource ItemStatusToColorConverter}}">
+                                        <TextBlock Text="{Binding DumpStatus}"
+                                                   FontSize="11"
+                                                   Foreground="White"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        
+                        <!-- 文件路径列 -->
+                        <DataGridTextColumn Header="文件路径" 
+                                            Binding="{Binding FileDirPath}" 
+                                            MinWidth="300"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+        
+        <!-- 底部状态栏 -->
+        <Border Grid.Row="3" 
+                x:Name="StatusBorder"
+                Background="#B0FFFFFF"
+                CornerRadius="8" 
+                Margin="16,8,16,16"
+                Padding="16,12">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                <!-- 状态文本 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="状态：" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="StatusTextBlock" Text="就绪" VerticalAlignment="Center"/>
+                </StackPanel>
+                
+                <!-- 进度条 -->
+                <ProgressBar Grid.Column="2" 
+                             x:Name="SyncProgressBar"
+                             Value="0"
+                             Minimum="0"
+                             Maximum="100"
+                             Width="200"
+                             Height="20"
+                             Margin="16,0,8,0"
+                             ShowProgressText="True"
+                             IsVisible="False"/>
+                <!-- 进度文本 -->
+                <TextBlock Grid.Column="3" 
+                           x:Name="ProgressTextBlock"
+                           IsVisible="False"
+                           Text=""
+                           VerticalAlignment="Center"
+                           Margin="8,0,24,0"/>
+                
+                <!-- 总文件数 -->
+                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="共" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TotalFilesCountTextBlock" Text="0" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Text="个文件" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+    </Panel>
+</sukiUi:SukiWindow>

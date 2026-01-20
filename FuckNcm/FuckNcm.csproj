@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>disable</Nullable>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <Version>0.0.1</Version>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.11"/>
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.11"/>
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.11"/>
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.11"/>
+        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.11">
+            <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+            <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4"/>
+        <PackageReference Include="SukiUI" Version="6.0.3"/>
+        <PackageReference Include="z440.atl.core" Version="7.10.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Resources\config.json"/>
+        <EmbeddedResource Include="Resources\config.json"/>
+        <None Remove="Resources\background.jpg"/>
+        <EmbeddedResource Include="Resources\background.jpg"/>
+        <None Remove="Resources\about.gif"/>
+    </ItemGroup>
+</Project>

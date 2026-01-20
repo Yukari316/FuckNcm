@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuckNcm", "FuckNcm\FuckNcm.csproj", "{7821E533-1587-4CC5-9474-9AB2A3D9A953}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuckNcm.UnitTest", "FuckNcm.UnitTest\FuckNcm.UnitTest.csproj", "{60F1B0AE-FDD8-48B2-B9B9-96149FCE4FB8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7821E533-1587-4CC5-9474-9AB2A3D9A953}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7821E533-1587-4CC5-9474-9AB2A3D9A953}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7821E533-1587-4CC5-9474-9AB2A3D9A953}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7821E533-1587-4CC5-9474-9AB2A3D9A953}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60F1B0AE-FDD8-48B2-B9B9-96149FCE4FB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60F1B0AE-FDD8-48B2-B9B9-96149FCE4FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60F1B0AE-FDD8-48B2-B9B9-96149FCE4FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60F1B0AE-FDD8-48B2-B9B9-96149FCE4FB8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
