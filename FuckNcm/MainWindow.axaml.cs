@@ -35,6 +35,7 @@ public partial class MainWindow : SukiWindow
         // 等待窗口加载完成后再执行初始化操作
         Task.Run(() =>
         {
+            loadedEvent.WaitOne();
             Dispatcher.UIThread.Post(() =>
             {
                 Utils.ThemeBackgroundService.UpdateBackgroundColor();
