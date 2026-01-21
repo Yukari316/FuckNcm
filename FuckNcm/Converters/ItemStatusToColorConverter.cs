@@ -11,17 +11,24 @@ namespace FuckNcm.Converters;
 /// </summary>
 public class ItemStatusToColorConverter : IValueConverter
 {
+    private static readonly SolidColorBrush UnparsedBrush = new(Colors.Blue);
+    private static readonly SolidColorBrush ParsingBrush  = new(Colors.DarkSlateBlue);
+    private static readonly SolidColorBrush ParsedBrush   = new(Colors.DarkGreen);
+    private static readonly SolidColorBrush ErrorBrush    = new(Colors.DarkRed);
+    private static readonly SolidColorBrush MovedBrush    = new(Colors.DarkCyan);
+    private static readonly SolidColorBrush SkippedBrush  = new(Colors.DarkOrange);
+
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is ItemStatus status)
             return status switch
                    {
-                       ItemStatus.UNPARSED => new SolidColorBrush(Colors.Blue),
-                       ItemStatus.PARSING => new SolidColorBrush(Colors.DarkSlateBlue),
-                       ItemStatus.PARSED => new SolidColorBrush(Colors.DarkGreen),
-                       ItemStatus.ERROR => new SolidColorBrush(Colors.DarkRed),
-                       ItemStatus.MOVED => new SolidColorBrush(Colors.DarkCyan),
-                       ItemStatus.SKIPPED => new SolidColorBrush(Colors.DarkOrange),
+                       ItemStatus.UNPARSED => UnparsedBrush,
+                       ItemStatus.PARSING => ParsingBrush,
+                       ItemStatus.PARSED => ParsedBrush,
+                       ItemStatus.ERROR => ErrorBrush,
+                       ItemStatus.MOVED => MovedBrush,
+                       ItemStatus.SKIPPED => SkippedBrush,
                        _ => throw new ArgumentOutOfRangeException(nameof(value), $"ItemStatus get {(int)value}")
                    };
         throw new NotSupportedException($"ItemStatus {value} is not supported");

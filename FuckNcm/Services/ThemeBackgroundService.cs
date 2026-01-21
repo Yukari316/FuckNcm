@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Avalonia.Styling;
+using FuckNcm.Models;
 using FuckNcm.Services.Interfaces;
 using SukiUI;
 using SukiUI.Controls;
@@ -20,23 +21,14 @@ public sealed class ThemeBackgroundService : IThemeBackgroundService
     private byte _darkOpacity  = 0x10;
     private byte _lightOpacity = 0x7D;
 
-    // 背景图片相关
-
-    public ThemeBackgroundService()
+    public ThemeBackgroundService(Config initConfig)
     {
-        SukiTheme.GetInstance().OnBaseThemeChanged += _ =>
-        {
-            UpdateBackgroundColor();
-            Utils.StorageService.Config.DarkTheme = IsDarkMode;
-            Utils.StorageService.SaveConfig();
-        };
         SukiTheme.GetInstance()
-                 .ChangeBaseTheme(Utils.StorageService.Config.DarkTheme ? ThemeVariant.Dark : ThemeVariant.Light);
-        UpdateBackgroundColor();
+                 .ChangeBaseTheme(initConfig.DarkTheme ? ThemeVariant.Dark : ThemeVariant.Light);
 
-        if (!string.IsNullOrEmpty(Utils.StorageService.Config.BackgroundImagePath)
-            && File.Exists(Utils.StorageService.Config.BackgroundImagePath))
-            SetBackgroundImage(Utils.StorageService.Config.BackgroundImagePath);
+        if (!string.IsNullOrEmpty(initConfig.BackgroundImagePath)
+            && File.Exists(initConfig.BackgroundImagePath))
+            SetBackgroundImage(initConfig.BackgroundImagePath);
         else
             SetDefaultBackgroundImage();
     }
@@ -53,7 +45,7 @@ public sealed class ThemeBackgroundService : IThemeBackgroundService
             field = value;
             OnPropertyChanged();
         }
-    } = null!;
+    } = null;
 
     /// <summary>
     /// 当前主题的背景透明度 (0-255)
@@ -229,6 +221,19 @@ public sealed class ThemeBackgroundService : IThemeBackgroundService
         BackgroundImageOpacity = IsDarkMode ? 0.15 : 0.6;
         CardBackground = new SolidColorBrush(Color.FromArgb(opacity, baseColor.R, baseColor.G, baseColor.B));
         Utils.MainWindow?.DarkModeIcon.IsVisible = IsDarkMode;
+    }
+
+    /// <summary>
+    /// 绑定 SukiTheme 主题变化事件
+    /// </summary>
+    public void BindingSukiThemeChangeEvent()
+    {
+        SukiTheme.GetInstance().OnBaseThemeChanged += _ =>
+        {
+            Utils.StorageService.Config.DarkTheme = IsDarkMode;
+            Utils.StorageService.SaveConfig();
+        };
+        UpdateBackgroundColor();
     }
 
     public event PropertyChangedEventHandler PropertyChanged;

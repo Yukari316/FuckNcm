@@ -17,50 +17,56 @@ public static class Utils
 {
     public static readonly IServiceCollection ServiceCollection = new ServiceCollection();
 
-    public static IServiceProvider ServiceProvider => ServiceCollection.BuildServiceProvider();
+    private static Lazy<IServiceProvider> ServiceProviderLazy = new(() => ServiceCollection.BuildServiceProvider());
+
+    private static readonly Lazy<HttpClient> HttpClientLazy = new(() => new HttpClient());
+
+    public static IServiceProvider ServiceProvider => ServiceProviderLazy.Value;
 
     public static IThemeBackgroundService ThemeBackgroundService =>
-        ServiceProvider.GetService<IThemeBackgroundService>();
+        ServiceProvider.GetRequiredService<IThemeBackgroundService>();
 
-    public static IStorageService StorageService => ServiceProvider.GetService<IStorageService>();
+    public static IStorageService StorageService => ServiceProvider.GetRequiredService<IStorageService>();
 
-    public static ISukiDialogManager DialogManager => ServiceProvider.GetService<ISukiDialogManager>();
+    public static ISukiDialogManager DialogManager => ServiceProvider.GetRequiredService<ISukiDialogManager>();
 
     public static MainWindow MainWindow => ServiceProvider.GetService<MainWindow>();
 
+    public static void RebuildServiceProvider() =>
+        ServiceProviderLazy = new Lazy<IServiceProvider>(() => ServiceCollection.BuildServiceProvider());
+
     internal static uint ReadUint32(this FileStream stream, int offset = 0)
     {
-        byte[] buffer = new byte[4];
-        stream.ReadExactly(buffer, offset, buffer.Length);
+        Span<byte> buffer = stackalloc byte[4];
+        stream.ReadExactly(buffer);
         return BinaryPrimitives.ReadUInt32LittleEndian(buffer);
     }
 
-    internal static byte[] DecryptAES(this byte[] data, byte[] key)
+    internal static ReadOnlySpan<byte> DecryptAES(this ReadOnlySpan<byte> data, ReadOnlySpan<byte> key)
     {
         using Aes aes = Aes.Create();
-        aes.Key  = key;
+        aes.Key  = key.ToArray();
         aes.Mode = CipherMode.ECB;
-        ICryptoTransform decrypter = aes.CreateDecryptor();
-        return decrypter.TransformFinalBlock(data, 0, data.Length);
+        return aes.DecryptEcb(data, PaddingMode.PKCS7);
     }
 
     internal static async ValueTask<(bool success, byte[] data)> DownloadAlbumCoverAsync(string url)
     {
-        HttpClient client = new();
         try
         {
-            HttpResponseMessage res = await client.GetAsync(url);
+            HttpResponseMessage res = await HttpClientLazy.Value.GetAsync(url);
             if (res.StatusCode != HttpStatusCode.OK)
                 return (false, Array.Empty<byte>());
-            await using Stream stream    = await res.Content.ReadAsStreamAsync();
-            await using var    memStream = new MemoryStream();
+            await using Stream       stream    = await res.Content.ReadAsStreamAsync();
+            await using MemoryStream memStream = new();
             await stream.CopyToAsync(memStream);
             memStream.Position = 0;
             return (true, memStream.ToArray());
         }
-        catch
+        catch (Exception ex)
         {
-            return (false, Array.Empty<byte>());
+            Console.WriteLine($"下载封面失败: {ex.Message}");
+            return (false, []);
         }
     }
 

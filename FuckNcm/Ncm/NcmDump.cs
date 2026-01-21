@@ -11,11 +11,17 @@ namespace FuckNcm.Ncm;
 
 public class NcmDump
 {
+    // NCM 文件结构偏移量
+    private const int    HEADER_SKIP_BYTES = 2;     // 跳过的头部字节
+    private const int    CRC32_SKIP_BYTES  = 5;     // CRC32 后跳过的字节
+    private const string DEFAULT_FORMAT    = "mp3"; // 默认输出格式
+
     public static async Task<(NcmParseStatus status, Track tagInfo)> DumpNcmFile(
         string path,
         string outPath,
         bool   saveFirstArtist = false)
     {
+        DateTime startTime = DateTime.Now;
         await using FileStream fileStream = new(path, FileMode.Open, FileAccess.Read);
 
         //检查文件头
@@ -24,20 +30,20 @@ public class NcmDump
 
         string fileName = Path.GetFileNameWithoutExtension(path);
 
-        Console.WriteLine($"parsing file[{fileName}]...");
+        Console.WriteLine($"[NCM] 解析文件: {fileName}");
 
-        fileStream.Seek(2, SeekOrigin.Current);
+        fileStream.Seek(HEADER_SKIP_BYTES, SeekOrigin.Current);
 
         //keybox
-        byte[] box = fileStream.MakeKeyBox();
-        Console.WriteLine($"get key box({box.Length})");
+        ReadOnlySpan<byte> box = fileStream.MakeKeyBox();
+        Console.WriteLine($"[NCM] 获取KeyBox [{box.Length} bytes]");
 
         //metainfo
         NetEaseMetaInfo meta = fileStream.ReadMeta();
-        Console.WriteLine("get metainfo");
+        Console.WriteLine($"[NCM] 获取元数据 id:[{meta.MusicId}]");
         //ext name
         string ext = string.IsNullOrEmpty(meta.Format)
-            ? "mp3"
+            ? DEFAULT_FORMAT
             : meta.Format;
 
         //why netease?
@@ -50,40 +56,44 @@ public class NcmDump
         string title          = meta.MusicName;
         string artist         = saveFirstArtist ? artists.FirstOrDefault() : string.Join(',', artists);
         string outputFileName = Utils.SanitizeFileName($"{artist} - {title}.{ext}");
-        string outputFilePath = $@"{outPath.Trim()}\{outputFileName}";
+        string outputFilePath = Path.Combine(outPath.Trim().Trim('\\'), outputFileName);
 
         //file exists
         if (File.Exists(outputFilePath))
+        {
+            Console.WriteLine("[NCM] 文件已存在，跳过此文件");
             return (NcmParseStatus.EXISTS, new Track(outputFilePath));
+        }
 
         //crc32
-        byte[] crc32bytes = new byte[4];
-        fileStream.ReadExactly(crc32bytes);
-        string crc32hash = $"0x{BitConverter.ToString(crc32bytes).Replace("-", string.Empty)}";
-        Console.WriteLine($"get crc32({crc32hash})");
+        Span<byte> crc32 = stackalloc byte[4];
+        fileStream.ReadExactly(crc32);
+        string crc32hash = $"0x{Convert.ToHexString(crc32)}";
+        Console.WriteLine($"[NCM] CRC32: {crc32hash}");
 
-        //skip 5 character
-        fileStream.Seek(5, SeekOrigin.Current);
+        //skip gap bytes
+        fileStream.Seek(CRC32_SKIP_BYTES, SeekOrigin.Current);
 
         //cover
         uint imageLen = fileStream.ReadUint32();
-        Console.WriteLine($"get cover image({imageLen})");
+        Console.WriteLine($"[NCM] 封面大小: [{imageLen} bytes]");
 
         //cover
-        byte[] imageBytes = new byte[imageLen];
-        fileStream.ReadExactly(imageBytes);
+        byte[] image = new byte[imageLen];
+        fileStream.ReadExactly(image);
 
         //audio
-        byte[] audioBytes = fileStream.ReadAudio(box);
-        Console.WriteLine($"get audio({audioBytes.Length})");
+        ReadOnlyMemory<byte> audio = fileStream.ReadAudio(box);
+        Console.WriteLine($"[NCM] 音频大小: {audio.Length} bytes");
 
         //保存文件
-        Console.WriteLine("saving music...");
-        string outFilePath = $@"{outPath.Trim('\\')}\{outputFileName}";
-        await File.WriteAllBytesAsync(outFilePath, audioBytes);
+        Console.WriteLine("[NCM] 保存音频文件...");
+        await File.WriteAllBytesAsync(outputFilePath, audio);
+        TimeSpan decryptTime = DateTime.Now - startTime;
+        Console.WriteLine($"[NCM] 音频文件保存完成，耗时: {(int)decryptTime.TotalMilliseconds} ms");
 
         //写入tag
-        Track track = new(outFilePath)
+        Track track = new(outputFilePath)
         {
             Title  = title,
             Artist = artist,
@@ -91,23 +101,26 @@ public class NcmDump
         };
         track.AdditionalFields.Add("Subtitle", string.Join(";", meta.Alias));
 
-        //cover
-        if (imageBytes.Length == 0)
+        //没有内嵌封面
+        if (image.Length == 0)
         {
+            Console.WriteLine("[NCM] 没有内嵌封面,尝试从网络获取封面...");
             (bool success, byte[] data) =
                 await Utils.DownloadAlbumCoverAsync(meta.AlbumPic);
-
-            imageBytes = success ? data : [];
+            image = success ? data : [];
         }
 
-        if (imageBytes.Length != 0)
+        if (image.Length != 0)
         {
-            PictureInfo cover = PictureInfo.fromBinaryData(imageBytes, PictureInfo.PIC_TYPE.CD);
+            Console.WriteLine("[NCM] 添加内嵌封面...");
+            PictureInfo cover = PictureInfo.fromBinaryData(image, PictureInfo.PIC_TYPE.CD);
             track.EmbeddedPictures.Add(cover);
         }
 
-        Console.WriteLine("saving music tags...");
+        Console.WriteLine("[NCM] 保存标签信息...");
         await track.SaveAsync();
+        TimeSpan tagSaveTime = DateTime.Now - startTime + decryptTime;
+        Console.WriteLine($"[NCM] 标签信息保存完成，耗时: {(int)tagSaveTime.TotalMilliseconds} ms");
 
         return (NcmParseStatus.OK, track);
     }

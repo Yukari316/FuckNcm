@@ -24,24 +24,18 @@ public partial class MainWindow : SukiWindow
 
         // 在容器中注册窗口
         Utils.ServiceCollection.AddSingleton(this);
+        Utils.RebuildServiceProvider();
         // 初始化背景服务并订阅事件
         Utils.ThemeBackgroundService.PropertyChanged += OnBackgroundServicePropertyChanged;
         // 初始化必要组件
         MusicDataGrid.ItemsSource = Utils.StorageService.SourceAudioFiles;
         DialogHost.Manager        = Utils.ServiceProvider.GetService<ISukiDialogManager>()!;
 
-        AutoResetEvent loadedEvent = new(false);
-        Loaded += (_, _) => loadedEvent.Set();
-        // 等待窗口加载完成后再执行初始化操作
-        Task.Run(() =>
+        Loaded += (_, _) =>
         {
-            loadedEvent.WaitOne();
-            Dispatcher.UIThread.Post(() =>
-            {
-                Utils.ThemeBackgroundService.UpdateBackgroundColor();
-                TargetPathTextBox.Text = Utils.StorageService.Config.LastTargetDir;
-            });
-        });
+            Utils.ThemeBackgroundService.UpdateBackgroundColor();
+            TargetPathTextBox.Text = Utils.StorageService.Config.LastTargetDir;
+        };
     }
 
     /// <summary>
@@ -98,9 +92,9 @@ public partial class MainWindow : SukiWindow
         }
 
         string targetDir = TargetPathTextBox.Text;
-        _ = Task.Run(() =>
+        _ = Task.Run(async () =>
         {
-            Utils.StorageService.ParseNcmFiles(targetDir);
+            await Utils.StorageService.ParseNcmFiles(targetDir);
             return Task.CompletedTask;
         });
     }

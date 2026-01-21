@@ -66,4 +66,9 @@ public interface IThemeBackgroundService : INotifyPropertyChanged
     /// 更新组件背景颜色
     /// </summary>
     public void UpdateBackgroundColor();
+
+    /// <summary>
+    /// 绑定 SukiTheme 主题变化事件
+    /// </summary>
+    public void BindingSukiThemeChangeEvent();
 }

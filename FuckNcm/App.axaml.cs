@@ -13,10 +13,15 @@ public class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
-        Utils.ServiceCollection.AddSingleton<IStorageService>(new StorageService());
-        Utils.StorageService.InitConfig();
-        Utils.ServiceCollection.AddSingleton<IThemeBackgroundService>(new ThemeBackgroundService());
+        StorageService storageService = new();
+        Utils.ServiceCollection.AddSingleton<IStorageService>(storageService);
+        Utils.ServiceCollection.AddSingleton<IThemeBackgroundService>(
+            new ThemeBackgroundService(storageService.Config));
         Utils.ServiceCollection.AddSingleton<ISukiDialogManager>(new SukiDialogManager());
+        Utils.RebuildServiceProvider();
+
+        //在所有服务注册完成后再绑定主题切换事件，防止DI提前被加载
+        Utils.ThemeBackgroundService.BindingSukiThemeChangeEvent();
     }
 
     public override void OnFrameworkInitializationCompleted()

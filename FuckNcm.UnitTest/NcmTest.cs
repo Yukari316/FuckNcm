@@ -16,7 +16,7 @@ public sealed class NcmTest
     [TestMethod]
     public void TestIsNcm()
     {
-        FileStream ncmFileStream = new(NCM_FILE_PATH, FileMode.Open, FileAccess.Read);
+        using FileStream ncmFileStream = new(NCM_FILE_PATH, FileMode.Open, FileAccess.Read);
         Assert.IsNotNull(ncmFileStream);
         Assert.IsTrue(ncmFileStream.CheckHeader());
     }
@@ -24,7 +24,7 @@ public sealed class NcmTest
     [TestMethod]
     public void TestIsNotNcm()
     {
-        FileStream audioFileStream = new(AUDIO_FILE_PATH, FileMode.Open, FileAccess.Read);
+        using FileStream audioFileStream = new(AUDIO_FILE_PATH, FileMode.Open, FileAccess.Read);
         Assert.IsNotNull(audioFileStream);
         Assert.IsFalse(audioFileStream.CheckHeader());
     }
@@ -32,7 +32,7 @@ public sealed class NcmTest
     [TestMethod]
     public async Task TestNcmDecryption()
     {
-        FileStream ncmFileStream = new(NCM_FILE_PATH, FileMode.Open, FileAccess.Read);
+        await using FileStream ncmFileStream = new(NCM_FILE_PATH, FileMode.Open, FileAccess.Read);
         Assert.IsNotNull(ncmFileStream);
         Assert.IsTrue(ncmFileStream.CheckHeader());
         (NcmParseStatus status, Track track) = await NcmDump.DumpNcmFile(NCM_FILE_PATH, OUT_PATH);

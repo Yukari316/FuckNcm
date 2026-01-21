@@ -22,55 +22,25 @@ public class AudioFileInfo
     /// <summary>
     /// 歌曲标题
     /// </summary>
-    public string Title
-    {
-        get => TrackInfo?.Title ?? string.Empty;
-        set
-        {
-            Task.Run(async () =>
-            {
-                TrackInfo.Title = value;
-                await TrackInfo.SaveAsync();
-            });
-        }
-    }
+    public string Title => TrackInfo?.Title ?? string.Empty;
 
     /// <summary>
     /// 歌曲作者
     /// </summary>
-    public string Artist
-    {
-        get => TrackInfo?.Artist ?? string.Empty;
-        set
-        {
-            Task.Run(async () =>
-            {
-                TrackInfo.Artist = value;
-                await TrackInfo.SaveAsync();
-            });
-        }
-    }
+    public string Artist => TrackInfo?.Artist ?? string.Empty;
 
     /// <summary>
     /// 歌曲专辑
     /// </summary>
-    public string Album
-    {
-        get => TrackInfo?.Album ?? string.Empty;
-        set
-        {
-            Task.Run(async () =>
-            {
-                TrackInfo.Album = value;
-                await TrackInfo.SaveAsync();
-            });
-        }
-    }
-
-    public string FilePath { get; set; }
+    public string Album => TrackInfo?.Album ?? string.Empty;
 
     /// <summary>
     /// 文件路径
+    /// </summary>
+    public string FilePath { get; set; }
+
+    /// <summary>
+    /// 文件所在目录路径
     /// </summary>
     public string FileDirPath => Path.GetDirectoryName(FilePath);
 

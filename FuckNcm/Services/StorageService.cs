@@ -29,6 +29,11 @@ public class StorageService : IStorageService
     private readonly string   _configPath          = Path.Combine(AppContext.BaseDirectory, "config.json");
     private readonly string[] _supportedExtensions = [".ncm", ".mp3", ".flac", ".wav", ".m4a", ".aac", ".ogg"];
 
+    public StorageService()
+    {
+        InitConfig();
+    }
+
 #region AudioFile
 
     public void LoadAudioFiles(string path, bool fromSource, SearchOption searchOption = SearchOption.AllDirectories)
@@ -103,7 +108,6 @@ public class StorageService : IStorageService
             }
 
         isLoading = false;
-        GC.Collect();
         //恢复UI交互
         Dispatcher.UIThread.Post(() => { Utils.MainWindow.SetButtonEnable(true); });
         if (loadErrors.Count > 0)
@@ -119,7 +123,7 @@ public class StorageService : IStorageService
             });
     }
 
-    public async void ParseNcmFiles(string outputDir)
+    public async Task ParseNcmFiles(string outputDir)
     {
         //禁用UI交互
         Dispatcher.UIThread.Post(() => { Utils.MainWindow.SetButtonEnable(false); });
@@ -155,7 +159,7 @@ public class StorageService : IStorageService
             if (!string.IsNullOrEmpty(audioFileInfo.FilePath) && Path.GetExtension(audioFileInfo.FilePath) != ".ncm")
             {
                 //移动非ncm文件到输出目录
-                string moveTargetPath = $@"{outputDir}\{audioFileInfo.FileName}";
+                string moveTargetPath = Path.Combine(outputDir, audioFileInfo.FileName);
                 bool   isMoved        = false;
                 if (!File.Exists(moveTargetPath))
                 {
@@ -212,7 +216,6 @@ public class StorageService : IStorageService
             }
         }
 
-        GC.Collect();
         Dispatcher.UIThread.Post(() => { Utils.MainWindow.SetButtonEnable(true); });
         if (failMessages.Count > 0)
             Dispatcher.UIThread.Post(async void () =>

@@ -2,11 +2,11 @@
 
 public class Config
 {
-    public bool DarkTheme { get; set; }
+    public bool DarkTheme { get; set; } = true;
 
-    public string LastSourceDir { get; set; }
+    public string LastSourceDir { get; set; } = string.Empty;
 
-    public string LastTargetDir { get; set; }
+    public string LastTargetDir { get; set; } = string.Empty;
 
-    public string BackgroundImagePath { get; set; }
+    public string BackgroundImagePath { get; set; } = string.Empty;
 }

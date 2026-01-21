@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO;
+using System.Threading.Tasks;
 using FuckNcm.Models;
 
 namespace FuckNcm.Services.Interfaces;
@@ -12,7 +13,7 @@ public interface IStorageService
 
     public void LoadAudioFiles(string path, bool fromSource, SearchOption searchOption = SearchOption.AllDirectories);
 
-    public void ParseNcmFiles(string outputDir);
+    public Task ParseNcmFiles(string outputDir);
 
     public void InitConfig();
 
